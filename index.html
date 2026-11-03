@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#17120f"><meta name="description" content="A realistic private-in-browser digital book reader.">
+<title>The Digital Library — Book Reader</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:wght@500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/page-flip@2.0.7/dist/css/page-flip.min.css">
+<style>
+:root{color-scheme:dark;--bg:#17120f;--panel:#211a16;--gold:#c9a66b;--muted:#b9aa98;--paper:#f3ead8;--ink:#33291f}
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(ellipse at 50% 20%,#453226 0,#211914 42%,#120f0d 100%);color:#f6efe5;font-family:'DM Sans',sans-serif;min-height:100vh}
+header{height:76px;display:flex;align-items:center;justify-content:space-between;padding:0 clamp(18px,5vw,72px);border-bottom:1px solid #ffffff16;background:#110e0c99;backdrop-filter:blur(14px)}
+.brand{display:flex;gap:12px;align-items:center;font-family:'Playfair Display',serif;font-size:21px}.brandmark{width:34px;height:34px;border:1px solid var(--gold);color:var(--gold);display:grid;place-items:center;border-radius:50%;font-size:18px}
+.header-note{font-size:12px;color:var(--muted);letter-spacing:.12em;text-transform:uppercase}
+main{max-width:1200px;margin:auto;padding:44px 22px 36px}.intro{text-align:center;margin-bottom:28px}.eyebrow{font-size:11px;letter-spacing:.24em;text-transform:uppercase;color:var(--gold)}h1{font:600 clamp(30px,5vw,48px)/1.12 'Playfair Display',serif;margin:12px 0 8px}.sub{color:#c6b8a7;font-size:14px}
+.stage{position:relative;min-height:500px;display:flex;align-items:center;justify-content:center;padding:20px 10px 30px;perspective:1600px}
+.stage:before{content:"";position:absolute;width:min(850px,95%);height:110px;bottom:5px;background:#0009;filter:blur(35px);border-radius:50%}
+#book{z-index:1;box-shadow:0 28px 65px #0009}
+.empty{z-index:1;width:min(360px,90vw);height:470px;background:linear-gradient(135deg,#7f1719,#4c0e13 55%,#260b10);border:7px solid #2a1714;box-shadow:inset 0 0 0 1px #d2ae6b66,12px 18px 35px #0009;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:30px;position:relative}
+.empty:before{content:"";position:absolute;inset:12px;border:1px solid #c7a56b88}.empty .small{font-size:10px;letter-spacing:.32em;color:#e0c48d}.empty .cover-title{font:600 36px/1.15 'Playfair Display',serif;margin:32px 0;color:#f4dfb1}.empty .author{font:14px 'Playfair Display',serif;letter-spacing:.16em;color:#e0c48d}
+.controls{position:relative;z-index:2;display:flex;justify-content:center;align-items:center;gap:10px;flex-wrap:wrap;margin:16px 0 26px}
+button,.upload-label{font:600 13px 'DM Sans';border:1px solid #786044;background:#2c2119;color:#f4e7d1;padding:11px 17px;border-radius:7px;cursor:pointer;transition:.2s}
+button:hover,.upload-label:hover{background:#493522;border-color:var(--gold)}button:disabled{opacity:.35;cursor:not-allowed}.primary{background:#a77b42;border-color:#d0ad73;color:#1b130d}.primary:hover{background:#c09252}
+#fileInput{display:none}.page-info{min-width:105px;text-align:center;color:#ddc9a9;font-size:13px;font-variant-numeric:tabular-nums}
+.toolbar{display:flex;justify-content:center;gap:10px;align-items:center;flex-wrap:wrap}.hint{text-align:center;color:#aa9b8b;font-size:12px;margin:14px 0 0}
+.notice{max-width:760px;margin:24px auto 0;border:1px solid #80633c66;background:#1d1712;padding:14px 17px;border-radius:8px;color:#c8b9a6;font-size:12px;line-height:1.6}.notice strong{color:#e5c58e}
+footer{text-align:center;padding:24px;color:#76695d;font-size:11px}
+@media(max-width:600px){header{height:64px}.header-note{display:none}main{padding-top:30px}.stage{min-height:390px;padding:8px 0 20px}.empty{height:390px;width:275px}.empty .cover-title{font-size:30px}.controls{gap:7px}button,.upload-label{padding:10px 12px;font-size:12px}}
+</style>
+</head>
+<body>
+<header><div class="brand"><span class="brandmark">✦</span><span>The Digital Library</span></div><div class="header-note">A quieter place to read</div></header>
+<main>
+<section class="intro"><div class="eyebrow">Your personal reading room</div><h1>Turn the page.</h1><div class="sub">A book-like reading experience, right in your browser.</div></section>
+<section class="stage" id="stage">
+<div class="empty" id="empty"><div class="small">THE DIGITAL LIBRARY</div><div class="cover-title">A BOOK<br>OF YOUR CHOICE</div><div class="author">OPEN • READ • DISCOVER</div></div>
+<div id="book" hidden></div>
+</section>
+<div class="controls">
+<label class="upload-label primary" for="fileInput">＋ Open a PDF</label><input id="fileInput" type="file" accept="application/pdf">
+<button id="prev" disabled>← Previous</button><span class="page-info" id="pageInfo">No book opened</span><button id="next" disabled>Next →</button>
+<button id="fullscreen" disabled>⛶ Fullscreen</button>
+</div>
+<div class="toolbar"><button id="zoomOut" disabled>− Zoom</button><button id="zoomIn" disabled>＋ Zoom</button><button id="reset" disabled>Close book</button></div>
+<p class="hint">Use the arrow keys, swipe, or drag a page corner to turn pages.</p>
+<div class="notice"><strong>Privacy:</strong> Your selected PDF is rendered locally in this browser. It is not uploaded to this website or added to the public repository. This site is a reader, not a distributor of copyrighted books.</div>
+</main><footer>THE DIGITAL LIBRARY · READ AT YOUR OWN PACE</footer>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/page-flip@2.0.7/dist/js/page-flip.browser.min.js"></script>
+<script>
+(() => {
+ const input=document.getElementById('fileInput'),empty=document.getElementById('empty'),bookEl=document.getElementById('book');
+ const prev=document.getElementById('prev'),next=document.getElementById('next'),info=document.getElementById('pageInfo');
+ const full=document.getElementById('fullscreen'),zi=document.getElementById('zoomIn'),zo=document.getElementById('zoomOut'),reset=document.getElementById('reset');
+ let flip=null,pdf=null,zoom=1,renderToken=0;
+ pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+ function update(){if(!flip)return;const p=flip.getCurrentPageIndex()+1;info.textContent=p+' / '+pdf.numPages;prev.disabled=p<=1;next.disabled=p>=pdf.numPages;}
+ function clearBook(){renderToken++;if(flip){try{flip.destroy()}catch(e){}flip=null}bookEl.innerHTML='';bookEl.hidden=true;empty.hidden=false;pdf=null;prev.disabled=next.disabled=full.disabled=zi.disabled=zo.disabled=reset.disabled=true;info.textContent='No book opened';input.value='';}
+ async function openBook(file){
+  if(!file||file.type!=='application/pdf'){alert('Please choose a valid PDF file.');return}
+  clearBook();const token=++renderToken;info.textContent='Preparing your book…';
+  try{
+   const data=await file.arrayBuffer();pdf=await pdfjsLib.getDocument({data}).promise;if(token!==renderToken)return;
+   const pages=[];for(let n=1;n<=pdf.numPages;n++){
+    if(token!==renderToken)return;
+    const page=await pdf.getPage(n),base=page.getViewport({scale:1});
+    const maxW=520,maxH=720,scale=Math.min(maxW/base.width,maxH/base.height,1.5);
+    const viewport=page.getViewport({scale});const canvas=document.createElement('canvas');const ctx=canvas.getContext('2d');
+    canvas.width=Math.ceil(viewport.width);canvas.height=Math.ceil(viewport.height);
+    await page.render({canvasContext:ctx,viewport}).promise;
+    const sheet=document.createElement('div');sheet.className='page';sheet.style.background='#f3ead8';sheet.style.overflow='hidden';
+    const img=document.createElement('img');img.src=canvas.toDataURL('image/jpeg',.88);img.alt='Page '+n;img.style.cssText='width:100%;height:100%;object-fit:contain;display:block;background:#f3ead8';
+    sheet.appendChild(img);pages.push(sheet);
+   }
+   if(token!==renderToken)return;
+   empty.hidden=true;bookEl.hidden=false;bookEl.innerHTML='';pages.forEach(p=>bookEl.appendChild(p));
+   const w=Math.max(260,Math.min(460,Math.floor((window.innerWidth-70)/2))),h=Math.min(650,Math.floor(window.innerHeight*.72));
+   flip=new St.PageFlip(bookEl,{width:w,height:h,size:'stretch',minWidth:260,maxWidth:520,minHeight:360,maxHeight:760,drawShadow:true,maxShadowOpacity:.42,showCover:true, mobileScrollSupport:true, flippingTime:850,usePortrait:true,startPage:0});
+   flip.loadFromHTML(bookEl.querySelectorAll('.page'));flip.on('flip',update);update();
+   prev.disabled=next.disabled=full.disabled=zi.disabled=zo.disabled=reset.disabled=false;
+  }catch(err){console.error(err);clearBook();alert('Could not open this PDF. Please try another file.')}
+ }
+ input.addEventListener('change',e=>openBook(e.target.files[0]));
+ prev.addEventListener('click',()=>flip&&flip.flipPrev());next.addEventListener('click',()=>flip&&flip.flipNext());
+ full.addEventListener('click',()=>{const el=document.getElementById('stage');if(!document.fullscreenElement)el.requestFullscreen?.();else document.exitFullscreen?.()});
+ zi.addEventListener('click',()=>{zoom=Math.min(1.25,zoom+.1);bookEl.style.transform='scale('+zoom+')'});
+ zo.addEventListener('click',()=>{zoom=Math.max(.7,zoom-.1);bookEl.style.transform='scale('+zoom+')'});
+ reset.addEventListener('click',()=>{bookEl.style.transform='';zoom=1;clearBook()});
+ document.addEventListener('keydown',e=>{if(!flip)return;if(e.key==='ArrowRight')flip.flipNext();if(e.key==='ArrowLeft')flip.flipPrev()});
+})();
+</script>
+</body></html>
